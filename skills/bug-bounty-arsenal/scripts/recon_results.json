@@ -1,0 +1,18 @@
+{
+  "domain": "--help",
+  "generated": "2026-09-02T01:49:59",
+  "subdomains_crtsh": [],
+  "wayback_urls": [],
+  "tech": [
+    {
+      "url": "https://--help",
+      "reachable": false,
+      "tech": []
+    }
+  ],
+  "js": {
+    "scripts": [],
+    "secrets": [],
+    "endpoints": []
+  }
+}

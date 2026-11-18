@@ -1,0 +1,64 @@
+{
+  "version": "1.0.0",
+  "description": "Tool manifest untuk BOUNTY. Bundled = file Python di paket. External = binary yang harus tersedia di PATH.",
+  "python_requirements": "requirements.txt",
+  "bundled": {
+    "root": [
+      "recon.py",
+      "cve_arsenal.py",
+      "h2_racer.py",
+      "ldap_probe.py"
+    ],
+    "skill_scripts": 69,
+    "notes": "Skrip stdlib-only kebanyakan. Beberapa butuh requests/urllib3/cryptography/h2spacex."
+  },
+  "external_required": [],
+  "external_recommended": [
+    {
+      "name": "subfinder",
+      "purpose": "passive subdomain enumeration",
+      "install": "go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest"
+    },
+    {
+      "name": "httpx",
+      "purpose": "HTTP probing",
+      "install": "go install github.com/projectdiscovery/httpx/cmd/httpx@latest"
+    },
+    {
+      "name": "nuclei",
+      "purpose": "template vulnerability scanning",
+      "install": "go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest"
+    },
+    {
+      "name": "katana",
+      "purpose": "web crawling",
+      "install": "go install github.com/projectdiscovery/katana/cmd/katana@latest"
+    },
+    {
+      "name": "ffuf",
+      "purpose": "web fuzzing",
+      "install": "go install github.com/ffuf/ffuf/v2@latest"
+    },
+    {
+      "name": "nmap",
+      "purpose": "port/service scan",
+      "install": "dnf install nmap / apt install nmap / brew install nmap"
+    },
+    {
+      "name": "amass",
+      "purpose": "attack surface mapping",
+      "install": "go install github.com/owasp-amass/amass/v4/cmd/amass@latest"
+    },
+    {
+      "name": "waybackurls",
+      "purpose": "historical URL discovery",
+      "install": "go install github.com/tomnomnom/waybackurls@latest"
+    }
+  ],
+  "policy": {
+    "tool_first": true,
+    "missing_external": "report missing + install recommendation; jangan blokir hunting jika core scripts cukup",
+    "missing_python": "pip install -r requirements.txt",
+    "no_hardcoded_paths": true
+  }
+}
