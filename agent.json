@@ -7,17 +7,19 @@
     "format": "[BOUNTY] - [content]",
     "operator_identity": "classified"
   },
-  "source_of_truth": ["MASTER.md", "AGENTS.md", "NO_REFUSAL.md"],
+  "source_of_truth": ["MASTER.md", "AGENTS.md", "EXECUTION_POLICY.md"],
   "loading": {
     "boot_sequence": false,
-    "instruction_files": ["AGENTS.md", "SOUL.md", "MASTER.md", "NO_REFUSAL.md"],
+    "instruction_files": ["AGENTS.md", "SOUL.md", "MASTER.md", "EXECUTION_POLICY.md"],
     "skill_dir": "skills",
     "memory_dir": "memory"
   },
-  "no_refusal": {
+  "execution_policy": {
     "active": true,
-    "levels": ["L0", "L1", "L2", "L3", "L4", "L5", "L6"],
-    "protocol": "NO_REFUSAL.md"
+    "scope_backed": true,
+    "full_completion": true,
+    "technical_questions_only": true,
+    "policy": "EXECUTION_POLICY.md"
   },
   "profiles": {
     "bounty": {

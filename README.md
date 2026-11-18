@@ -26,7 +26,7 @@ cp -R /path/ke/bounty-agent/. /path/ke/project/
 | `SOUL.md` | persona BOUNTY |
 | `agent.json` | manifest generik: identitas, profil, source of truth |
 | `skills/` | 66 skill, termasuk `bug-bounty-arsenal`, `hunt-*`, `report-tools`, `validate`, `triage-validation` |
-| `NO_REFUSAL.md` | protokol no-refusal penuh |
+| `EXECUTION_POLICY.md` | kebijakan eksekusi netral untuk harness manapun |
 | `memory/` | 27 deep-dive referensi |
 | `recon.py`, `cve_arsenal.py`, `h2_racer.py`, `ldap_probe.py` | helper operasional |
 | `tools.json` | manifest tool: bundled, external, dan perintah install |
@@ -54,9 +54,9 @@ scope → recon → surface.md → rank → hunt → validate → PoC → report
 - Bukti wajib sebelum lapor.
 - Semua output disimpan ke `reports/<slug>_<ts>/`.
 
-## No Refusal
+## Execution Policy
 
-Aktif. Protokol L0–L6 ada di `NO_REFUSAL.md`, diringkas di `AGENTS.md` Section 1A dan `MASTER.md` Section 2A.
+Aktif. Target dalam scope sah dikerjakan sampai selesai. Detail di `EXECUTION_POLICY.md`, diringkas di `AGENTS.md` Section 1A dan `MASTER.md` Section 2A.
 
 Harness hanya perlu memuat file instruksi inti; tidak bergantung pada tool/vendor tertentu.
 
