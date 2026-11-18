@@ -1,16 +1,23 @@
 {
-  "version": "1.0.0",
-  "description": "Tool manifest untuk BOUNTY. Bundled = file Python di paket. External = binary yang harus tersedia di PATH.",
+  "version": "1.1.0",
+  "description": "Tool manifest untuk BOUNTY. hardened = tool aman buatan paket ini. external = binary yang dipanggil wrapper.",
   "python_requirements": "requirements.txt",
   "bundled": {
-    "root": [
+    "hardened": [
+      "tools/_hardening.py",
+      "tools/recon_run.py",
+      "tools/evidence_fetch.py",
+      "tools/report_build.py",
+      "tools/selfcheck.py"
+    ],
+    "legacy_root": [
       "recon.py",
       "cve_arsenal.py",
       "h2_racer.py",
       "ldap_probe.py"
     ],
     "skill_scripts": 69,
-    "notes": "Skrip stdlib-only kebanyakan. Beberapa butuh requests/urllib3/cryptography/h2spacex."
+    "notes": "Legacy root scripts remain for reference. Prefer tools/ hardened wrappers."
   },
   "external_required": [],
   "external_recommended": [

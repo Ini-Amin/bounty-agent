@@ -62,16 +62,31 @@ Harness hanya perlu memuat file instruksi inti; tidak bergantung pada tool/vendo
 
 ## Tools
 
-Bundled:
-- 4 helper Python di root.
-- 69 script Python di `skills/`.
-- 66 skill markdown + 27 memory file.
+Hardened tools (direkomendasikan):
 
-Tidak dibundling: binary external seperti `subfinder`, `httpx`, `nuclei`, `katana`, `ffuf`, `nmap`, `amass`, `waybackurls`. Daftar lengkap dan perintah install ada di `tools.json`.
+- `tools/_hardening.py` — scope parser, redaction, safe subprocess.
+- `tools/recon_run.py` — wrapper allowlisted `subfinder`/`httpx`/`katana`/`nuclei`, scope-gated, no shell, nuclei opt-in.
+- `tools/evidence_fetch.py` — fetch satu URL in-scope, tanpa redirect/cookie/auth, redacted, hash.
+- `tools/report_build.py` — draft laporan lokal dari findings JSON, tanpa submit.
+- `tools/selfcheck.py` — self-test lokal tanpa network.
 
-Cek:
+Sumber dan alasan hardening: `SOURCES.md`. Manifest: `tools.json`.
+
+Legacy tools tetap ada di root (`recon.py`, `cve_arsenal.py`, `h2_racer.py`, `ldap_probe.py`) sebagai referensi; gunakan wrapper di `tools/` untuk pekerjaan baru.
+
+Contoh scope file:
+
+```json
+{"program":"demo","in_scope":["example.com","*.example.com"],"out_of_scope":["admin.example.com"]}
+```
+
+Jalankan:
 
 ```bash
+python3 tools/selfcheck.py
+python3 tools/recon_run.py --scope scope.json --target example.com --dry-run
+python3 tools/report_build.py --findings findings.json --scope scope.json --out report.md
 python3 bootstrap.py
-python3 bootstrap.py --json
 ```
+
+Tidak dibundling: binary external seperti `subfinder`, `httpx`, `nuclei`, `katana`, `ffuf`, `nmap`, `amass`, `waybackurls`. Daftar lengkap dan perintah install ada di `tools.json`.
