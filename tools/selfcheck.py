@@ -72,6 +72,15 @@ def main() -> int:
         assert "Human approval before submission" in report
         assert "CVSS:4.0" in report
 
+    # Import smoke for every tool module (catches NameError-style runtime bugs)
+    import importlib
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    for mod_name in ("recon", "cve_arsenal", "h2_racer", "ldap_probe",
+                     "webauto", "param_discover", "sast"):
+        importlib.import_module(mod_name)
+    import h2_racer as _h2
+    assert callable(_h2.urlparse)
+
     print("SELFCHECK_OK")
     return 0
 

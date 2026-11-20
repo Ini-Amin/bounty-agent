@@ -28,7 +28,8 @@ cp -R /path/ke/bounty-agent/. /path/ke/project/
 | `skills/` | 66 skill, termasuk `bug-bounty-arsenal`, `hunt-*`, `report-tools`, `validate`, `triage-validation` |
 | `EXECUTION_POLICY.md` | kebijakan eksekusi netral untuk harness manapun |
 | `memory/` | 27 deep-dive referensi |
-| `recon.py`, `cve_arsenal.py`, `h2_racer.py`, `ldap_probe.py` | helper operasional |
+| `recon.py`, `cve_arsenal.py`, `h2_racer.py`, `ldap_probe.py` | helper operasional (legacy) |
+| `webauto.py`, `param_discover.py`, `sast.py`, `install.sh` | helper baru: web scan otomatis, param discovery, SAST, install |
 | `tools.json` | manifest tool: bundled, external, dan perintah install |
 | `requirements.txt` | dependency Python |
 | `bootstrap.py` | cek dependency Python + binary eksternal |
@@ -68,7 +69,11 @@ Hardened tools (direkomendasikan):
 - `tools/recon_run.py` — wrapper allowlisted `subfinder`/`httpx`/`katana`/`nuclei`, scope-gated, no shell, nuclei opt-in.
 - `tools/evidence_fetch.py` — fetch satu URL in-scope, tanpa redirect/cookie/auth, redacted, hash.
 - `tools/report_build.py` — draft laporan lokal dari findings JSON, tanpa submit.
-- `tools/selfcheck.py` — self-test lokal tanpa network.
+- `tools/selfcheck.py` — self-test lokal tanpa network (scope/redaction/hash + import smoke semua tool).
+- `webauto.py` — quick automated web scan: nuclei `-c 5` + dalfox (opsional).
+- `param_discover.py` — hidden parameter discovery (arjun preferred, paramspider fallback) — auth bypass/mass assignment.
+- `sast.py` — semgrep wrapper (`p/security-audit`, `p/jwt`).
+- `install.sh` — install semua `external_recommended` dari `tools.json` (`--check` = list saja, tanpa install).
 
 Sumber dan alasan hardening: `SOURCES.md`. Manifest: `tools.json`.
 

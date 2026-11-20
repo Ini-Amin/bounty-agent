@@ -642,7 +642,9 @@ def main():
     target_group.add_argument("--targets", help="File with target hosts")
 
     parser.add_argument("--deep-probe", action="store_true",
-                        help="Send malformed ASN.1 probes (WARNING: may crash service)")
+                        help="Send malformed ASN.1 probes (requires --confirm)")
+    parser.add_argument("--confirm", action="store_true",
+                        help="Acknowledge risk — allow --deep-probe (may crash LDAP service on vulnerable systems)")
     parser.add_argument("--threads", type=int, default=10, help="Scan threads")
     parser.add_argument("--timeout", type=int, default=10, help="Timeout seconds")
     parser.add_argument("--output", default="./reports", help="Output directory")
@@ -660,7 +662,11 @@ def main():
         with open(args.targets) as f:
             targets = [l.strip() for l in f if l.strip() and not l.startswith("#")]
 
-    results = prober.scan_targets(targets, args.threads, args.deep_probe)
+    deep_probe = args.deep_probe
+    if deep_probe and not args.confirm:
+        print("[ldap] --deep-probe blocked — add --confirm (may crash LDAP service on vulnerable systems)")
+        deep_probe = False
+    results = prober.scan_targets(targets, args.threads, do_deep_probe=deep_probe)
     generate_report(results, args.output)
 
     dc_count = sum(1 for r in results if r.get("is_domain_controller"))
