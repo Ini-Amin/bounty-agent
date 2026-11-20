@@ -8,7 +8,11 @@
       "tools/recon_run.py",
       "tools/evidence_fetch.py",
       "tools/report_build.py",
-      "tools/selfcheck.py"
+      "tools/selfcheck.py",
+      "webauto.py",
+      "param_discover.py",
+      "sast.py",
+      "install.sh"
     ],
     "legacy_root": [
       "recon.py",

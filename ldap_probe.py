@@ -205,12 +205,14 @@ class LDAPProber:
             print(f"{ts} {prefix} {msg}")
 
     def connect(self, host, port, use_ssl=False):
-        """Connect to LDAP service."""
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(self.timeout)
+        """Connect to LDAP service (IPv4 or IPv6)."""
+        try:
+            sock = socket.create_connection((host, port), timeout=self.timeout)
+        except Exception as e:
+            self.log(f"Connection failed {host}:{port} — {e}", "debug")
+            return None
 
         try:
-            sock.connect((host, port))
             if use_ssl:
                 ctx = _ssl.create_default_context()
                 ctx.check_hostname = False
@@ -219,6 +221,10 @@ class LDAPProber:
             return sock
         except Exception as e:
             self.log(f"Connection failed {host}:{port} — {e}", "debug")
+            try:
+                sock.close()
+            except Exception:
+                pass
             return None
 
     def send_recv(self, sock, data, recv_size=4096):
@@ -293,18 +299,21 @@ class LDAPProber:
         return attrs
 
     def scan_ports(self, host):
-        """Quick port scan for LDAP services."""
+        """Quick port scan for LDAP services (IPv4 or IPv6)."""
         open_ports = []
         for port in [LDAP_PORT, LDAPS_PORT, GC_PORT, GCS_PORT]:
+            sock = None
             try:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.settimeout(3)
-                result = sock.connect_ex((host, port))
-                if result == 0:
-                    open_ports.append(port)
-                sock.close()
+                sock = socket.create_connection((host, port), timeout=3)
+                open_ports.append(port)
             except Exception:
                 pass
+            finally:
+                if sock is not None:
+                    try:
+                        sock.close()
+                    except Exception:
+                        pass
         return open_ports
 
     def query_rootdse(self, host, port=389):

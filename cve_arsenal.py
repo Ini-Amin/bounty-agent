@@ -48,6 +48,7 @@ BANNER = """
 CVE_MODULES = {
     "sshole": {
         "cve": "CVE-2026-123158",
+        "cwe": "CWE-916",
         "name": "SSHole — OpenSSH Auth Bypass",
         "script": "sshole.py",
         "ports": [22],
@@ -55,6 +56,7 @@ CVE_MODULES = {
     },
     "wp-toctou": {
         "cve": "CVE-2026-119977",
+        "cwe": "CWE-362",
         "name": "WP-TOCTOU — WordPress RCE",
         "script": "wp_toctou.py",
         "ports": [80, 443],
@@ -62,6 +64,7 @@ CVE_MODULES = {
     },
     "h2-race": {
         "cve": "CVE-2026-119618",
+        "cwe": "CWE-362",
         "name": "H2-Racer — Apache mod_http2 RCE",
         "script": "h2_racer.py",
         "ports": [443, 80, 8443],
@@ -69,6 +72,7 @@ CVE_MODULES = {
     },
     "ldap": {
         "cve": "CVE-2026-119958",
+        "cwe": "CWE-122",
         "name": "LDAP-Probe — Windows LDAP RCE",
         "script": "ldap_probe.py",
         "ports": [389, 636, 3268, 3269],
@@ -76,6 +80,7 @@ CVE_MODULES = {
     },
     "sonicwall": {
         "cve": "CVE-2026-19868",
+        "cwe": "CWE-306",
         "name": "SonicWall SSLVPN MFA Bypass",
         "script": None,  # Fingerprint-only mode built into arsenal
         "ports": [443, 4433],
@@ -212,7 +217,13 @@ def run_arsenal(targets, modules, output_dir, threads=10, deep_probe=False, verb
                 scanner = SSHoleScanner(verbose=verbose)
                 module_results = scanner.scan_targets(targets, threads=threads)
             except ImportError:
-                print(f"[-] Cannot import sshole module — run from script directory")
+                print(f"[-] sshole.py NOT FOUND in repo — reporting {len(targets)} target(s) as UNAVAILABLE")
+                module_results = [
+                    {"host": t, "status": "UNAVAILABLE",
+                     "cve": mod_info["cve"], "cwe": mod_info["cwe"],
+                     "details": ["sshole.py missing from repo — restore before use"]}
+                    for t in targets
+                ]
 
         elif mod_key == "wp-toctou":
             try:
@@ -220,7 +231,13 @@ def run_arsenal(targets, modules, output_dir, threads=10, deep_probe=False, verb
                 scanner = WPTOCTOUScanner(verbose=verbose)
                 module_results = scanner.scan_targets(targets, threads=threads)
             except ImportError:
-                print(f"[-] Cannot import wp_toctou module")
+                print(f"[-] wp_toctou.py NOT FOUND in repo — reporting {len(targets)} target(s) as UNAVAILABLE")
+                module_results = [
+                    {"host": t, "status": "UNAVAILABLE",
+                     "cve": mod_info["cve"], "cwe": mod_info["cwe"],
+                     "details": ["wp_toctou.py missing from repo — restore before use"]}
+                    for t in targets
+                ]
 
         elif mod_key == "h2-race":
             try:
@@ -249,8 +266,10 @@ def run_arsenal(targets, modules, output_dir, threads=10, deep_probe=False, verb
 
         all_results["summary"][mod_key] = {
             "cve": mod_info["cve"],
+            "cwe": mod_info["cwe"],
             "scanned": len(module_results),
             "vulnerable": vuln_count,
+            "unavailable": sum(1 for r in module_results if r.get("status") == "UNAVAILABLE"),
         }
 
         print(f"\n[*] {mod_info['name']}: {vuln_count}/{len(module_results)} vulnerable")
@@ -270,16 +289,27 @@ def run_arsenal(targets, modules, output_dir, threads=10, deep_probe=False, verb
         f.write(f"**Modules:** {', '.join(all_results['modules_run'])}\n\n")
 
         f.write("## Summary\n\n")
-        f.write("| Module | CVE | Scanned | Vulnerable |\n")
-        f.write("|---|---|---|---|\n")
+        f.write("| Module | CVE | CWE | Scanned | Vulnerable |\n")
+        f.write("|---|---|---|---|---|\n")
 
         total_vuln = 0
         for mod_key, summary in all_results["summary"].items():
             status = f"🔴 {summary['vulnerable']}" if summary['vulnerable'] else f"✅ {summary['vulnerable']}"
-            f.write(f"| {mod_key} | {summary['cve']} | {summary['scanned']} | {status} |\n")
+            f.write(f"| {mod_key} | {summary['cve']} | {summary['cwe']} | {summary['scanned']} | {status} |\n")
             total_vuln += summary["vulnerable"]
 
         f.write(f"\n**Total Findings: {total_vuln}**\n\n")
+
+        # Unavailable modules surfaced (anti silent-skip)
+        unavail_notes = [
+            f"{s.get('unavailable', 0)}/{s['scanned']} unavailable — {mod_key}: {s['cve']} (CWE {s.get('cwe','-')}) — module file missing (restore before use)"
+            for mod_key, s in all_results["summary"].items() if s.get("unavailable")
+        ]
+        if unavail_notes:
+            f.write("## Unavailable modules\n\n")
+            for n in unavail_notes:
+                f.write(f"- {n}\n")
+            f.write("\n")
 
         # Detail per module
         for mod_key, mod_results in all_results["results"].items():
@@ -288,6 +318,7 @@ def run_arsenal(targets, modules, output_dir, threads=10, deep_probe=False, verb
                             r.get("status") in ["VULNERABLE", "EXPLOITABLE"]]
             if vuln_results:
                 f.write(f"## {CVE_MODULES[mod_key]['name']}\n\n")
+                f.write(f"- CVE: {CVE_MODULES[mod_key]['cve']} · CWE: {CVE_MODULES[mod_key]['cwe']}\n\n")
                 for r in vuln_results:
                     host = r.get("host") or r.get("target", "?")
                     f.write(f"- **{host}** — {r.get('status', 'VULNERABLE')}\n")

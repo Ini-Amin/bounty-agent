@@ -126,7 +126,7 @@ def main() -> int:
         })
         print(f"recon: {len(rows)} rows -> {out}")
         return 0
-    except (ToolError, OSError, json.JSONDecodeError) as exc:
+    except (ToolError, OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"ERR: {exc}", file=sys.stderr)
         return 2
 

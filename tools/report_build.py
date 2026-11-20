@@ -75,6 +75,22 @@ def render(finding: dict, program: str) -> str:
     return "\n".join(lines)
 
 
+def _validate_finding(finding: dict) -> None:
+    """Anti-slop: reject findings missing required fields before writing."""
+    missing = []
+    for key in ("title", "target", "severity"):
+        val = str(finding.get(key) or "").strip()
+        if not val:
+            missing.append(key)
+    ev = finding.get("evidence") or []
+    if not isinstance(ev, (list, tuple)):
+        ev = [ev]
+    if not any(str(e).strip() for e in ev):
+        missing.append("evidence")
+    if missing:
+        raise ToolError(f"finding missing required field(s): {', '.join(missing)}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Bug-bounty draft report builder")
     ap.add_argument("--findings", required=True, help="JSON array or object with findings[]")
@@ -93,6 +109,7 @@ def main() -> int:
         for finding in findings:
             if not isinstance(finding, dict):
                 raise ToolError("each finding must be an object")
+            _validate_finding(finding)
             if scope:
                 scope.check(str(finding.get("target", "")))
             blocks.append(render(finding, program))

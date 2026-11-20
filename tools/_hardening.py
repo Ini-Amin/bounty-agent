@@ -10,7 +10,9 @@ import json
 import os
 import re
 import shutil
+import socket
 import subprocess
+import threading
 from datetime import datetime, timezone
 from fnmatch import fnmatch
 from pathlib import Path
@@ -20,6 +22,34 @@ from urllib.parse import urlsplit, urlunsplit
 MAX_OUTPUT = 2_000_000
 ENV_KEYS = ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR", "NO_COLOR", "TERM")
 BLOCKED_HOSTS = {"localhost", "metadata.google.internal", "metadata", "instance-data"}
+
+_RESOLVE_CACHE: dict = {}
+
+
+def _resolved_addrs(host: str, timeout_s: float = 2.0) -> set:
+    """Best-effort DNS resolve with timeout (getaddrinfo has none).
+
+    On timeout/failure returns empty set; Scope.check then allows the
+    target (the user explicitly asked for that host).
+    """
+    if host in _RESOLVE_CACHE:
+        return set(_RESOLVE_CACHE[host])
+    out: set = set()
+
+    def _run():
+        try:
+            for _fam, _typ, _proto, _canon, addr in socket.getaddrinfo(host, None):
+                if addr:
+                    out.add(addr[0])
+        except Exception:
+            pass
+
+    th = threading.Thread(target=_run, daemon=True)
+    th.start()
+    th.join(timeout_s)
+    if not th.is_alive():
+        _RESOLVE_CACHE[host] = set(out)
+    return set(out)
 
 
 class ToolError(Exception):
@@ -223,6 +253,22 @@ class Scope:
                 raise ToolError("metadata/link-local address blocked")
             if not self.allow_private and (ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast):
                 raise ToolError(f"private/special address blocked: {host}")
+        else:
+            # Hostname — best-effort resolve with timeout; reject when any
+            # resolved address is link-local/metadata or private/loopback/
+            # reserved/multicast (unless allow_private). TOCTOU (rebinding
+            # between check and fetch) cannot be fully closed here.
+            resolved = _resolved_addrs(host)
+            for a in sorted(resolved):
+                try:
+                    rip = ipaddress.ip_address(a)
+                except ValueError:
+                    continue
+                if rip.is_link_local or rip == ipaddress.ip_address("169.254.169.254"):
+                    raise ToolError(f"metadata/link-local address resolved for {host}: {a}")
+                if not self.allow_private and (
+                        rip.is_private or rip.is_loopback or rip.is_reserved or rip.is_multicast):
+                    raise ToolError(f"private/special address resolved for {host}: {a}")
         path = parts.path or "/"
         if any(_entry_matches(entry, host, path) for entry in self.out_of_scope):
             raise ToolError(f"target is out of scope: {host}{path}")

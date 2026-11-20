@@ -509,7 +509,7 @@ def normalize_target(raw: str):
 def http_session() -> requests.Session:
     s = requests.Session()
     s.headers.update({"User-Agent": UA, "Accept": "*/*"})
-    s.verify = False
+    s.verify = True  # TLS verification ON by default; opt out via --insecure
     s.mount("https://", requests.adapters.HTTPAdapter(pool_maxsize=20))
     s.mount("http://", requests.adapters.HTTPAdapter(pool_maxsize=20))
     return s
@@ -3101,7 +3101,7 @@ STAGE_HINTS = {
 }
 
 
-def run(target, stages, threads, fast, deep, as_json) -> int:
+def run(target, stages, threads, fast, deep, as_json, insecure=False) -> int:
     base, host, domainish = normalize_target(target)
     ts = time.strftime("%Y%m%d_%H%M%S")
     outdir = OUTROOT / f"{host}_{ts}"
@@ -3171,6 +3171,8 @@ def run(target, stages, threads, fast, deep, as_json) -> int:
         },
     }
 
+    if insecure:
+        ctx["session"].verify = False
     mode = "DEEP" if deep else ("FAST" if fast else "DEFAULT")
     print(f"""
 ============================================================
@@ -3246,6 +3248,8 @@ output:
     p.add_argument("--deep", action="store_true", help="aggressive extra sources + higher caps")
     p.add_argument("--json", action="store_true", help="print summary JSON to stdout")
     p.add_argument("--list-stages", action="store_true", help="print stages and exit")
+    p.add_argument("--insecure", action="store_true",
+                   help="Disable TLS verification for HTTP fetches (opt-in; default verifies)")
     return p
 
 
@@ -3266,7 +3270,8 @@ def main(argv=None) -> int:
     if bad:
         print(f"ERROR: unknown stages: {bad}\nvalid: {ALL_STAGES}")
         return 2
-    return run(args.target, stages, args.threads, args.fast, args.deep, args.json)
+    return run(args.target, stages, args.threads, args.fast, args.deep, args.json,
+               insecure=args.insecure)
 
 
 if __name__ == "__main__":
