@@ -2157,7 +2157,7 @@ def _finding_full_md(f, ctx):
         L.append("requests.packages.urllib3.disable_warnings()")
         L.append(f"base = sys.argv[1] if len(sys.argv) > 1 else {ctx['base']!r}")
         L.append(f"r = requests.get(base.rstrip('/') + {det['path']!r}, timeout=10,")
-        L.append("                 verify=False, allow_redirects=False,")
+        L.append("                 verify=True, allow_redirects=False,")
         L.append('                 headers={"User-Agent": "YATIM-Security-Auditor/1.0"})')
         L.append('print(f"HTTP {r.status_code} len={len(r.content)}")')
         L.append("print(r.text[:500])")
@@ -2218,7 +2218,7 @@ def main():
     base = sys.argv[1] if len(sys.argv) > 1 else {ctx["base"]!r}
     url = base.rstrip("/") + PATH
     try:
-        r = requests.get(url, timeout=10, verify=False, allow_redirects=False,
+        r = requests.get(url, timeout=10, verify=True, allow_redirects=False,
                          headers={{"User-Agent": UA, "Accept": "*/*"}})
     except requests.RequestException as e:
         print(f"REQUEST ERROR: {{e}}")

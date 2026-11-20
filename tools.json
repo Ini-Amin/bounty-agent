@@ -18,7 +18,9 @@
       "recon.py",
       "cve_arsenal.py",
       "h2_racer.py",
-      "ldap_probe.py"
+      "ldap_probe.py",
+      "sshole.py",
+      "wp_toctou.py"
     ],
     "skill_scripts": 69,
     "notes": "Legacy root scripts remain for reference. Prefer tools/ hardened wrappers."
